@@ -8,7 +8,21 @@ pub fn generate_ed25519_keypair() -> identity::Keypair {
 }
 
 pub fn save_keypair_to_file(keypair: &identity::Keypair, file_path_str: String) -> std::io::Result<()> {
-    let file_path = PathBuf::from(file_path_str);
+
+    // 将String转换为PathBuf
+    let mut file_path = PathBuf::from(file_path_str);
+
+    // 检查路径是否存在，如果存在且是文件，则返回错误
+    if file_path.exists() && file_path.is_file() {
+        return Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "Path points to an existing file"));
+    }
+
+    // 如果路径存在但不是文件（可能是目录），则在路径后面加上"node.key"
+    if file_path.exists() && file_path.is_dir() {
+        file_path = file_path.join("node.key");
+    }
+
+    // let file_path = PathBuf::from(file_path_str);
     let keypair_bytes = keypair.to_protobuf_encoding()
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;;
     let mut file = File::create(file_path)?;

@@ -58,10 +58,10 @@ fn file_test() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // let file_path = PathBuf::from("ed25519_keypair.dat");
 
     // 将密钥对保存到文件
-    file_tools::save_keypair_to_file(&keypair, "ed25519_keypair.dat".to_string())?;
+    file_tools::save_keypair_to_file(&keypair, "./".to_string())?;
 
     // 从文件加载密钥对
-    let loaded_keypair = file_tools::load_keypair_from_file("ed25519_keypair.dat".to_string())?;
+    let loaded_keypair = file_tools::load_keypair_from_file("node.key".to_string())?;
 
     // 比较生成和读取的公钥是否相同
     assert_eq!(keypair.public(), loaded_keypair.public(), "Public keys do not match");
@@ -80,6 +80,8 @@ fn file_test() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    // file_test();
+    // return Ok(());
     let bootnodes = vec![
         // 这里填入实际的bootnodes地址，例如:
         // "/ip4/104.131.131.82/tcp/4001/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb"

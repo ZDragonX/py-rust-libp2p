@@ -8,9 +8,9 @@ async def subscribe_task():
     await libp2p.subscribe_to_messages(my_callback)
 
 async def main():
-    libp2p.generate_ed25519_keypair("a.txt")
+    # libp2p.generate_ed25519_keypair("a.txt")
     bn = [
-        "/ip4/127.0.0.1/udp/5000/quic-v1/p2p/12D3KooWSYoEJBh6UtfAT8wdepcvH2sjVGUrSFjgsofZwvNWgFPe"
+        "/ip4/172.19.96.1/udp/5000/quic-v1/p2p/12D3KooWSYoEJBh6UtfAT8wdepcvH2sjVGUrSFjgsofZwvNWgFPe"
     ]
     await libp2p.init_global_p2p_network(bn, 9655, "a.txt")
     # await asyncio.sleep(3)

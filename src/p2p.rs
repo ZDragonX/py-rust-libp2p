@@ -93,10 +93,13 @@ impl P2PNetwork {
                 let mdns =
                     mdns::tokio::Behaviour::new(mdns::Config::default(), key.public().to_peer_id())?;
 
-                let identify = identify::Behaviour::new(identify::Config::new(
+                let mut identify_cfg = identify::Config::new(
                     "/ipfs/id/1.0.0".to_string(),
                     key.public(),
-                ));
+                );
+                identify_cfg = identify_cfg.with_push_listen_addr_updates(true);
+                let identify = identify::Behaviour::new(identify_cfg);
+
                 let mut cfg = kad::Config::default();
                 let store = kad::store::MemoryStore::new(key.public().to_peer_id());
                 let kademlia = kad::Behaviour::with_config(key.public().to_peer_id(), store, cfg);
@@ -208,7 +211,11 @@ impl P2PNetwork {
                         // println!("Sent identify info to {peer_id:?}")
                     }
                     // Prints out the info received via the identify event
-                    SwarmEvent::Behaviour(MyBehaviourEvent::Identify(identify::Event::Received { info, .. })) => {
+                    SwarmEvent::Behaviour(MyBehaviourEvent::Identify(identify::Event::Received {peer_id,  info })) => {
+                        for address in info.listen_addrs.iter() {
+                            // 将地址添加到 Kademlia 的路由表中
+                            swarm.behaviour_mut().kademlia.add_address(&peer_id, address.clone());
+                        }
                         // println!("Received {info:?}")
                     }
                     SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
@@ -283,7 +290,7 @@ impl P2PNetwork {
                         let _ = subscribe_message_tx_clone.send(message_event);
                     }
                     SwarmEvent::NewListenAddr { address, .. } => {
-                        println!("Local node is listening on {address}");
+                        // println!("Local node is listening on {address}");
                         let full_addr = format!("{}/p2p/{}", address, swarm.local_peer_id());
                         println!("Full address: {}", full_addr);
                         let mut addrs = full_addrs_clone.write().await;
@@ -299,13 +306,13 @@ impl P2PNetwork {
                     } => {
                             println!("Got ConnectionEstablished from peer: {peer_id}");
                              // 从 endpoint 中提取地址信息
-                            let addr = match endpoint {
-                                ConnectedPoint::Dialer { address, .. } => address,
-                                ConnectedPoint::Listener { send_back_addr, .. } => send_back_addr,
-                            };
-
-                            // 尝试将对等节点及其地址添加到路由表
-                            swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
+                            // let addr = match endpoint {
+                            //     ConnectedPoint::Dialer { address, .. } => address,
+                            //     ConnectedPoint::Listener { send_back_addr, .. } => send_back_addr,
+                            // };
+                            //
+                            // // 尝试将对等节点及其地址添加到路由表
+                            // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
                     }
                     SwarmEvent::OutgoingConnectionError {
                         peer_id,
