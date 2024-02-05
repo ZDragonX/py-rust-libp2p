@@ -20,7 +20,7 @@ fn init_global_p2p_network(py: Python<'_>, bootnodes: Vec<String>, port: u64, ke
     let tp = GLOBAL_P2P_NETWORK.clone();
     pyo3_asyncio::tokio::future_into_py(py, async move {
         let p2p_net = P2PNetwork::new(bootnodes, port, key_path)
-            .await.expect("TODO: panic message");
+            .await.expect("start p2p server error");
         {
             let mut network = tp.lock().await;
             *network = Some(p2p_net);

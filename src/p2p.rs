@@ -53,7 +53,7 @@ pub struct P2PNetwork {
 }
 
 impl P2PNetwork {
-    pub async fn new(bootnodes: Vec<String>, port: u64, key_path: String) -> Result<Self, Box<dyn Error>> {
+    pub async fn new(bootnodes: Vec<String>, port: u64, key_path: String) -> Result<Self> {
         // let local_key = identity::Keypair::generate_ed25519();
         let local_key = file_tools::load_keypair_from_file(key_path)?;
         let local_peer_id = PeerId::from(local_key.public());
