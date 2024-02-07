@@ -37,7 +37,7 @@ enum SwarmCommand {
     GetClosestPeers(PeerId),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MessageEvent {
     pub source: PeerId,
     pub content: Vec<u8>,
@@ -45,6 +45,7 @@ pub struct MessageEvent {
 }
 
 #[pyclass]
+#[derive(Clone, Debug)]
 pub struct P2PNetwork {
     pub peer_id: PeerId,
     command_tx: mpsc::Sender<SwarmCommand>,
@@ -287,7 +288,13 @@ impl P2PNetwork {
                         // if let Err(e) = subscribe_message_tx.send(message_event).await {
                         //     eprintln!("Error sending message event: {:?}", e);
                         // }
-                        let _ = subscribe_message_tx_clone.send(message_event);
+                        let res = subscribe_message_tx_clone.send(message_event);
+                        match res {
+                            Ok(_) => {}
+                            Err(e) => {
+                                    println!("send receive MessageEvent err: {:?}", e)
+                                }
+                        }
                     }
                     SwarmEvent::NewListenAddr { address, .. } => {
                         // println!("Local node is listening on {address}");
@@ -383,18 +390,6 @@ impl P2PNetwork {
         Ok(())
         // rx.await.context("Error waiting for get closest peers response")?
     }
-
-    /*
-    let p2p_network = P2PNetwork::new(bootnodes).await?;
-    let mut receiver = p2p_network.subscribe_to_messages();
-
-    tokio::spawn(async move {
-        while let Ok(message_event) = receiver.recv().await {
-            println!("Received message from {:?}: {:?}", message_event.source, message_event.content);
-            // 在这里处理接收到的消息
-        }
-    });
-      */
 }
 
 
@@ -413,29 +408,4 @@ impl P2PNetwork {
         None
     }
 
-    // fn generate_ed25519_keypair() -> identity::Keypair {
-    //     identity::Keypair::generate_ed25519()
-    // }
-    //
-    // fn store_private_key_to_file<P: AsRef<Path>>(keypair: &identity::Keypair, path: P) -> Result<(), std::io::Error> {
-    //     if let identity::Keypair::Ed25519(ref key) = keypair {
-    //         let secret_key_bytes = key.secret().as_ref();
-    //         let mut file = File::create(path)?;
-    //         file.write_all(secret_key_bytes)?;
-    //     }
-    //     Ok(())
-    // }
-    //
-    // // 工具函数：从文件中读取Ed25519私钥
-    // fn read_ed25519_private_key_from_file<P: AsRef<Path>>(path: P) -> Result<identity::Keypair, Box<dyn std::error::Error>> {
-    //     let mut file = File::open(path)?;
-    //     let mut contents = Vec::new();
-    //     file.read_to_end(&mut contents)?;
-    //
-    //     // 假设私钥是直接以二进制形式存储的
-    //     let secret_key = identity::ed25519::SecretKey::from_bytes(&contents)?;
-    //     let keypair = identity::Keypair::Ed25519(secret_key.into());
-    //
-    //     Ok(keypair)
-    // }
 }

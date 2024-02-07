@@ -131,7 +131,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         message_with_timestamp.extend_from_slice(b" "); // 添加一个空格作为分隔符
                         message_with_timestamp.extend_from_slice(timestamp_bytes); // 添加时间戳
 
-                        p2p_network.publish_message(message_with_timestamp).await?;
+                        match p2p_network.publish_message(message_with_timestamp).await {
+                            Ok(_) => {
+                                println!("publish_message success");
+                            }
+                            Err(e) => {
+                                println!("publish_message failed: {:?}", e);
+                            }
+                        };
                     }
                     Some("Get") => {
                         let connected_peers = p2p_network.get_connected_peers().await?;
