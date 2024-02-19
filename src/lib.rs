@@ -119,9 +119,26 @@ fn get_host_addrs(py: Python<'_>) -> PyResult<&PyAny> {
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("P2PNetwork is not initialized"))
         }
-
     })
 }
+
+#[pyfunction]
+fn get_peer_id(py: Python<'_>) -> PyResult<&PyAny> {
+    let tp = GLOBAL_P2P_NETWORK.clone();
+    pyo3_asyncio::tokio::future_into_py(py, async move {
+        let network = tp.lock().await;
+        if let Some(network) = &*network {
+            let peer_id = network.peer_id.to_string();
+            Python::with_gil(|py| {
+                // 将Rust Vec<String>转换为Python列表
+                Ok(peer_id)
+            })
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("P2PNetwork is not initialized"))
+        }
+    })
+}
+
 
 #[pyfunction]
 fn generate_ed25519_keypair(path: String) -> PyResult<String> {
@@ -129,8 +146,6 @@ fn generate_ed25519_keypair(path: String) -> PyResult<String> {
     file_tools::save_keypair_to_file(&keypair, path.clone())?;
     Ok(path)
 }
-
-
 
 #[pymodule]
 fn p2p_helper(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -141,5 +156,6 @@ fn p2p_helper(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(subscribe_to_messages, m)?)?;
     m.add_function(wrap_pyfunction!(generate_ed25519_keypair, m)?)?;
     m.add_function(wrap_pyfunction!(get_host_addrs, m)?)?;
+    m.add_function(wrap_pyfunction!(get_peer_id, m)?)?;
     Ok(())
 }

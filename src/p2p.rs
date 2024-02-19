@@ -133,15 +133,6 @@ impl P2PNetwork {
             }
         }
 
-        //
-        // Add bootnodes to kademlia
-        // for peer in bootnodes {
-        //     swarm
-        //         .behaviour_mut()
-        //         .kademlia
-        //         .add_address(&peer.parse()?, "/dnsaddr/bootstrap.libp2p.io".parse()?);
-        //
-        // }
 
         // Listen on all interfaces and whatever port the OS assigns
         swarm.listen_on(format!("/ip4/0.0.0.0/udp/{}/quic-v1", port.clone()).parse()?)?;
