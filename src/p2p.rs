@@ -302,7 +302,7 @@ impl P2PNetwork {
                         established_in: _,
                         connection_id: _,
                     } => {
-                            println!("Got ConnectionEstablished from peer: {peer_id}");
+                            //println!("Got ConnectionEstablished from peer: {peer_id}");
                              // 从 endpoint 中提取地址信息
                             // let addr = match endpoint {
                             //     ConnectedPoint::Dialer { address, .. } => address,
