@@ -183,14 +183,14 @@ impl P2PNetwork {
                             swarm.behaviour_mut().kademlia.get_closest_peers(peer_id);
                                 // 遍历所有非空的桶
                             for kbucket in swarm.behaviour_mut().kademlia.kbuckets() {
-                                println!("Bucket:");
+                                // println!("Bucket:");
 
                                 // 遍历桶中的每个对等点
-                                for entry in kbucket.iter() {
-                                    // 打印对等点的 PeerId 和关联的地址
-                                    println!("  PeerId: {:?}", entry.node.key.preimage());
-                                    println!("  Addresses: {:?}", entry.node.value);
-                                }
+                                // for entry in kbucket.iter() {
+                                //     // 打印对等点的 PeerId 和关联的地址
+                                //     println!("  PeerId: {:?}", entry.node.key.preimage());
+                                //     println!("  Addresses: {:?}", entry.node.value);
+                                // }
                             }
                             // 注意：这里我们不能直接发送结果，因为 `get_closest_peers` 是非阻塞的
                             // 而且结果会通过 Kademlia 事件返回
@@ -212,14 +212,14 @@ impl P2PNetwork {
                     }
                     SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
                         for (peer_id, multiaddr) in list {
-                            println!("mDNS discovered a new peer: {peer_id}");
+                            // println!("mDNS discovered a new peer: {peer_id}");
                             swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
                             swarm.behaviour_mut().kademlia.add_address(&peer_id, multiaddr);
                         }
                     },
                     SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
                         for (peer_id, _multiaddr) in list {
-                            println!("mDNS discover peer has expired: {peer_id}");
+                            // println!("mDNS discover peer has expired: {peer_id}");
                             swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
                         }
                     },
@@ -240,27 +240,27 @@ impl P2PNetwork {
                     },
                     SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::RoutingUpdated  {  peer, is_new_peer, addresses, old_peer, ..})) => {
                         // swarm.behaviour_mut().kademlia.bootstrap().expect("bootstrap err");
-                        println!("Routing table updated:");
-                        println!("  Peer ID: {:?}", peer);
-                        println!("  Is new peer: {}", is_new_peer);
-                        println!("  Addresses: {:?}", addresses);
-                        if let Some(old_peer) = old_peer {
-                            println!("  Old peer evicted: {:?}", old_peer);
-                        }
+                        // println!("Routing table updated:");
+                        // println!("  Peer ID: {:?}", peer);
+                        // println!("  Is new peer: {}", is_new_peer);
+                        // println!("  Addresses: {:?}", addresses);
+                        // if let Some(old_peer) = old_peer {
+                        //     println!("  Old peer evicted: {:?}", old_peer);
+                        // }
                     }
                     SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::UnroutablePeer  {  peer})) => {
-                        println!("UnroutablePeer:");
-                        println!("  Peer ID: {:?}", peer);
+                        // println!("UnroutablePeer:");
+                        // println!("  Peer ID: {:?}", peer);
                     }
                     SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::RoutablePeer  {  peer: PeerId, address: Multiaddr})) => {
-                        println!("RoutablePeer:");
-                        println!("  Peer ID: {:?}", PeerId);
-                        println!("  Peer ID: {:?}", Multiaddr);
+                        // println!("RoutablePeer:");
+                        // println!("  Peer ID: {:?}", PeerId);
+                        // println!("  Peer ID: {:?}", Multiaddr);
                     }
                     SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::PendingRoutablePeer  {  peer: PeerId, address: Multiaddr})) => {
-                        println!("PendingRoutablePeer:");
-                        println!("  Peer ID: {:?}", PeerId);
-                        println!("  Peer ID: {:?}", Multiaddr);
+                        // println!("PendingRoutablePeer:");
+                        // println!("  Peer ID: {:?}", PeerId);
+                        // println!("  Peer ID: {:?}", Multiaddr);
                     }
 
                     SwarmEvent::Behaviour(MyBehaviourEvent::Gossipsub(gossipsub::Event::Message {
@@ -268,9 +268,9 @@ impl P2PNetwork {
                         message_id: id,
                         message,
                     })) =>{
-                         println!(
-                            "Got message with id: {id} from peer: {peer_id}",
-                        );
+                        //  println!(
+                        //     "Got message with id: {id} from peer: {peer_id}",
+                        // );
 
                          let message_event = MessageEvent {
                             source: peer_id,
