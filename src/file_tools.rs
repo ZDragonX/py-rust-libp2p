@@ -1,6 +1,7 @@
 use libp2p::{identity, PeerId};
 use std::{fs::File, io::{Read, Write}, path::Path, path::PathBuf};
 use std::error::Error;
+use base64::{encode, decode};
 
 // 生成Ed25519密钥对
 pub fn generate_ed25519_keypair() -> identity::Keypair {
@@ -40,3 +41,33 @@ pub fn load_keypair_from_file(file_path_str: String) -> std::io::Result<identity
     Ok(keypair)
 }
 
+/// 使用私钥进行签名
+pub fn sign_data(file_path_str: String, data: String) -> std::io::Result<String> {
+    let keypair = load_keypair_from_file(file_path_str)?;
+    let signature = keypair.sign(data.as_bytes()).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+    Ok(encode(signature))
+}
+
+/// 将公钥序列化为字符串
+pub fn get_serialize_public_key(file_path_str: String) -> std::io::Result<String> {
+    let keypair = load_keypair_from_file(file_path_str)?;
+    let public_key_bytes = keypair.public().encode_protobuf();
+    Ok(encode(public_key_bytes))
+}
+
+/// 从字符串转换为公钥
+pub fn deserialize_public_key(encoded: String) -> std::io::Result<identity::PublicKey> {
+    let bytes = decode(encoded).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    identity::PublicKey::try_decode_protobuf(&bytes).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+}
+
+/// 使用公钥验证签名
+pub fn verify_signature(public_key: &identity::PublicKey, data: String, signature: String) -> std::io::Result<()> {
+    let signature_bytes = decode(signature).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+
+    if public_key.verify(data.as_bytes(), &signature_bytes) {
+        Ok(())
+    } else {
+        Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Verification failed"))
+    }
+}

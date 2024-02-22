@@ -54,20 +54,32 @@ struct MyBehaviour {
 }
 
 fn file_test() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    let keypair = file_tools::generate_ed25519_keypair();
+    // let keypair = file_tools::generate_ed25519_keypair();
     // let file_path = PathBuf::from("ed25519_keypair.dat");
 
-    // 将密钥对保存到文件
-    file_tools::save_keypair_to_file(&keypair, "./".to_string())?;
+    let sig = file_tools::sign_data("node.key".to_string(), "123".to_string())?;
+    let pubkey_str = file_tools::get_serialize_public_key("node.key".to_string())?;
+    let pubkey = file_tools::deserialize_public_key(pubkey_str.clone())?;
+    let res = file_tools::verify_signature(&pubkey, "123".to_string(), sig)?;
 
-    // 从文件加载密钥对
     let loaded_keypair = file_tools::load_keypair_from_file("node.key".to_string())?;
 
+    assert_eq!(loaded_keypair.public(), pubkey, "Public keys do not match");
+
+
+
+
+    // 将密钥对保存到文件
+    // file_tools::save_keypair_to_file(&keypair, "./".to_string())?;
+
+    // 从文件加载密钥对
+    // let loaded_keypair = file_tools::load_keypair_from_file("node.key".to_string())?;
+
     // 比较生成和读取的公钥是否相同
-    assert_eq!(keypair.public(), loaded_keypair.public(), "Public keys do not match");
+    // assert_eq!(keypair.public(), loaded_keypair.public(), "Public keys do not match");
 
     // 出于示例目的，这里显示如何安全地处理和打印公钥信息
-    println!("Loaded public key: {:?}", loaded_keypair.public());
+    // println!("Loaded public key: {:?}", loaded_keypair.public());
 
     Ok(())
 }
@@ -80,8 +92,8 @@ fn file_test() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    // file_test();
-    // return Ok(());
+    file_test();
+    return Ok(());
     let bootnodes = vec![
         // 这里填入实际的bootnodes地址，例如:
         // "/ip4/104.131.131.82/tcp/4001/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb"

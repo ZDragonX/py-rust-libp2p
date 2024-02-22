@@ -2005,6 +2005,7 @@ dependencies = [
  "anyhow",
  "async-stream",
  "async-trait",
+ "base64",
  "chrono",
  "env_logger",
  "futures",

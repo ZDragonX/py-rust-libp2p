@@ -147,6 +147,18 @@ fn generate_ed25519_keypair(path: String) -> PyResult<String> {
     Ok(path)
 }
 
+#[pyfunction]
+fn sign_data(file_path_str: String, data: String) -> PyResult<String> {
+    let keypair = file_tools::sign_data(file_path_str, data)?;
+    Ok(keypair)
+}
+
+#[pyfunction]
+fn get_serialize_public_key(path: String) -> PyResult<String> {
+    let pub_key = file_tools::get_serialize_public_key(path)?;
+    Ok(pub_key)
+}
+
 #[pymodule]
 fn p2p_helper(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(init_global_p2p_network, m)?)?;
@@ -157,5 +169,7 @@ fn p2p_helper(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(generate_ed25519_keypair, m)?)?;
     m.add_function(wrap_pyfunction!(get_host_addrs, m)?)?;
     m.add_function(wrap_pyfunction!(get_peer_id, m)?)?;
+    m.add_function(wrap_pyfunction!(sign_data, m)?)?;
+    m.add_function(wrap_pyfunction!(get_serialize_public_key, m)?)?;
     Ok(())
 }
