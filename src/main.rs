@@ -57,10 +57,10 @@ fn file_test() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // let keypair = file_tools::generate_ed25519_keypair();
     // let file_path = PathBuf::from("ed25519_keypair.dat");
 
-    let sig = file_tools::sign_data("node.key".to_string(), "123".to_string())?;
+    let sig = file_tools::sign_data("node.key".to_string(), "123".as_bytes().to_vec())?;
     let pubkey_str = file_tools::get_serialize_public_key("node.key".to_string())?;
     let pubkey = file_tools::deserialize_public_key(pubkey_str.clone())?;
-    let res = file_tools::verify_signature(&pubkey, "123".to_string(), sig)?;
+    let res = file_tools::verify_signature(&pubkey, "123".as_bytes().to_vec(), sig)?;
 
     let loaded_keypair = file_tools::load_keypair_from_file("node.key".to_string())?;
 

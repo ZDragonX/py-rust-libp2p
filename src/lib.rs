@@ -148,7 +148,7 @@ fn generate_ed25519_keypair(path: String) -> PyResult<String> {
 }
 
 #[pyfunction]
-fn sign_data(file_path_str: String, data: String) -> PyResult<String> {
+fn sign_data(file_path_str: String, data: Vec<u8>) -> PyResult<String> {
     let keypair = file_tools::sign_data(file_path_str, data)?;
     Ok(keypair)
 }

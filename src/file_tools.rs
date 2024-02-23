@@ -42,9 +42,9 @@ pub fn load_keypair_from_file(file_path_str: String) -> std::io::Result<identity
 }
 
 /// 使用私钥进行签名
-pub fn sign_data(file_path_str: String, data: String) -> std::io::Result<String> {
+pub fn sign_data(file_path_str: String, data: Vec<u8>) -> std::io::Result<String> {
     let keypair = load_keypair_from_file(file_path_str)?;
-    let signature = keypair.sign(data.as_bytes()).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+    let signature = keypair.sign(&*data).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
     Ok(encode(signature))
 }
 
@@ -62,10 +62,10 @@ pub fn deserialize_public_key(encoded: String) -> std::io::Result<identity::Publ
 }
 
 /// 使用公钥验证签名
-pub fn verify_signature(public_key: &identity::PublicKey, data: String, signature: String) -> std::io::Result<()> {
+pub fn verify_signature(public_key: &identity::PublicKey, data: Vec<u8>, signature: String) -> std::io::Result<()> {
     let signature_bytes = decode(signature).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
-    if public_key.verify(data.as_bytes(), &signature_bytes) {
+    if public_key.verify(&*data, &signature_bytes) {
         Ok(())
     } else {
         Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Verification failed"))
