@@ -20,6 +20,7 @@ use std::str::FromStr;
 use libp2p::core::ConnectedPoint;
 use pyo3::prelude::*;
 use std::{fs::File, io::Write, io::Read, path::Path};
+use chrono::{SecondsFormat, Utc};
 use crate::file_tools;
 
 #[derive(NetworkBehaviour)]
@@ -169,7 +170,14 @@ impl P2PNetwork {
                             let _ = result_tx.send(dial_result);
                         },
                         SwarmCommand::PublishMessage( message, result_tx) => {
-                            let publish_result = swarm.behaviour_mut().gossipsub.publish(topic.clone(), message);
+                            let timestamp = Utc::now().to_rfc3339_opts(SecondsFormat::Nanos, true); // 获取当前UTC时间并转换为RFC3339格式的字符串
+                            let timestamp_bytes = timestamp.as_bytes();
+
+                            let mut message_with_timestamp = message.clone(); // 克隆原始消息以避免修改
+                            message_with_timestamp.extend_from_slice(b"@"); // 添加一个空格作为分隔符
+                            message_with_timestamp.extend_from_slice(timestamp_bytes); // 添加时间戳
+
+                            let publish_result = swarm.behaviour_mut().gossipsub.publish(topic.clone(), message_with_timestamp);
                             // 将成功的Result<MessageId, _>转换为Result<(), _>
                             let result = publish_result.map(|_message_id| ()).map_err(|e| anyhow::Error::new(e));
                             // 发送操作结果
@@ -271,21 +279,29 @@ impl P2PNetwork {
                         //  println!(
                         //     "Got message with id: {id} from peer: {peer_id}",
                         // );
+                        let mut message_with_timestamp = message.data.clone();
+                        if let Some(position) = message_with_timestamp.iter().rposition(|&x| x == b'@') {
+                            // 分割出原始消息
+                            let original_message = message_with_timestamp[..position].to_vec();
 
-                         let message_event = MessageEvent {
-                            source: peer_id,
-                            content: message.data.clone(),
-                        };
-                        // if let Err(e) = subscribe_message_tx.send(message_event).await {
-                        //     eprintln!("Error sending message event: {:?}", e);
-                        // }
-                        let res = subscribe_message_tx_clone.send(message_event);
-                        match res {
-                            Ok(_) => {}
-                            Err(e) => {
-                                    println!("send receive MessageEvent err: {:?}", e)
-                                }
+                            let message_event = MessageEvent {
+                                source: peer_id,
+                                content: Vec::from(original_message),
+                            };
+                            // if let Err(e) = subscribe_message_tx.send(message_event).await {
+                            //     eprintln!("Error sending message event: {:?}", e);
+                            // }
+                            let res = subscribe_message_tx_clone.send(message_event);
+                            match res {
+                                Ok(_) => {}
+                                Err(e) => {
+                                        println!("receive MessageEvent err: {:?}", e)
+                                    }
+                            }
+                        } else {
+                            println!("'@' not found in the message_with_timestamp");
                         }
+
                     }
                     SwarmEvent::NewListenAddr { address, .. } => {
                         // println!("Local node is listening on {address}");
