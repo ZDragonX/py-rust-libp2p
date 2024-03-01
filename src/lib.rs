@@ -93,7 +93,7 @@ fn subscribe_to_messages(py: Python, callback: PyObject) -> PyResult<&PyAny> {
         };
 
         while let Ok(message_event) = receiver_result.recv().await {
-            println!("Received message from {:?}: {:?}", message_event.source, message_event.content);
+            // println!("Received message from {:?}: {:?}", message_event.source, message_event.content);
             Python::with_gil(|py| {
                 // 将消息转换为Python的bytes对象
                 let py_message = PyBytes::new(py, &message_event.content);

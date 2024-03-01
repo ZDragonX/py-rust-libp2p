@@ -51,6 +51,7 @@ pub struct P2PNetwork {
     pub peer_id: PeerId,
     command_tx: mpsc::Sender<SwarmCommand>,
     subscribe_message_tx: broadcast::Sender<MessageEvent>,
+    connection_closed_message_tx: broadcast::Sender<PeerId>,
     pub full_addrs: Arc<RwLock<Vec<String>>>
 }
 
@@ -141,8 +142,10 @@ impl P2PNetwork {
 
         let (command_tx, mut command_rx) = mpsc::channel(64 ); // 创建通道
         let (subscribe_message_tx, _) =  broadcast::channel(1024);;
+        let (connection_closed_message_tx, _) =  broadcast::channel(1024);;
 
         let subscribe_message_tx_clone = subscribe_message_tx.clone();
+        let connection_closed_message_tx_clone = connection_closed_message_tx.clone();
         let mut timer = interval(Duration::from_secs(10));
         let full_addrs = Arc::new(RwLock::new(Vec::new()));
         let full_addrs_clone = full_addrs.clone();
@@ -295,7 +298,7 @@ impl P2PNetwork {
                             match res {
                                 Ok(_) => {}
                                 Err(e) => {
-                                        println!("receive MessageEvent err: {:?}", e)
+                                        // println!("user subscribe channel err: {:?}", e.to_string())
                                     }
                             }
                         } else {
@@ -328,6 +331,21 @@ impl P2PNetwork {
                             // // 尝试将对等节点及其地址添加到路由表
                             // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
                     }
+                    SwarmEvent::ConnectionClosed {
+                        peer_id,
+                        connection_id,
+                        endpoint,
+                        num_established,
+                        cause
+                    } => {
+                            let res = connection_closed_message_tx_clone.send(peer_id);
+                            match res {
+                                Ok(_) => {}
+                                Err(e) => {
+                                        // println!("user connection  err: {:?}", e.to_string())
+                                    }
+                            }
+                    }
                     SwarmEvent::OutgoingConnectionError {
                         peer_id,
                         connection_id: _,
@@ -353,6 +371,7 @@ impl P2PNetwork {
             peer_id: local_peer_id,
             command_tx,
             subscribe_message_tx,
+            connection_closed_message_tx,
             full_addrs,
             // topic,
         };
@@ -383,6 +402,10 @@ impl P2PNetwork {
 
     pub fn subscribe_to_messages(&self) -> broadcast::Receiver<MessageEvent> {
         self.subscribe_message_tx.subscribe()
+    }
+
+    pub fn listen_connection_closed(&self) -> broadcast::Receiver<PeerId> {
+        self.connection_closed_message_tx.subscribe()
     }
 
     pub async fn get_closest_peers(&self, peer_id_str: &str) -> Result<(), anyhow::Error> {
