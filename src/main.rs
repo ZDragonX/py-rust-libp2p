@@ -31,11 +31,19 @@ use libp2p::kad::Mode;
 use anyhow::{Result};
 use chrono::Utc;
 use std::{fs::File, io::{Read, Write}, path::PathBuf};
+use k256::{
+    ecdsa::{self, signature::{Signer, Verifier}, SigningKey, VerifyingKey},
+    elliptic_curve::sec1::ToEncodedPoint,
+};
+use sha3::{Digest, Keccak256};
+use hex::{encode, decode};
 
 pub mod p2p;
 pub mod file_tools;
 // 在 main.rs 或 lib.rs 的其他模块中
 use p2p::P2PNetwork;
+pub mod ecdsa_tools;
+use ecdsa_tools::*;
 
 
 const BOOTNODES: [&str; 4] = [
@@ -89,10 +97,44 @@ fn file_test() -> std::result::Result<(), Box<dyn std::error::Error>> {
 //     demo().await
 // }
 
+pub fn ec_test() -> Result<(), Box<dyn Error>> {
+    // 生成ECDSA密钥对
+    let signing_key = generate_ecdsa_keypair();
+
+    // 保存密钥对到文件
+    let file_path_str = "node.key".to_string();
+    save_keypair_to_file(&signing_key, file_path_str.clone())?;
+
+    // 从文件加载密钥对
+    let loaded_signing_key = load_keypair_from_file(file_path_str.clone())?;
+
+    // 使用私钥进行签名
+    let data_to_sign = b"Hello, world!";
+    let signature = sign_data(file_path_str.clone(), data_to_sign.to_vec())?;
+    println!("Signature: {}", signature);
+
+    // 获取并打印序列化的公钥
+    let serialized_public_key = get_serialize_public_key(file_path_str.clone())?;
+    println!("Serialized Public Key: {}", serialized_public_key);
+
+    // 使用公钥验证签名
+    let verification_result = verify_signature(serialized_public_key, data_to_sign.to_vec(), signature);
+    println!("Verification passed: {:?}", verification_result.is_ok());
+
+    // 生成EVM地址并打印
+    let evm_address = generate_evm_address(&loaded_signing_key);
+    println!("EVM Address: {}", evm_address);
+
+    // 打印私钥（谨慎处理！）
+    println!("Private Key: {}", encode(loaded_signing_key.to_bytes()));
+
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    file_test();
+    // file_test();
+    ec_test();
     return Ok(());
     let bootnodes = vec![
         // 这里填入实际的bootnodes地址，例如:

@@ -1,5 +1,6 @@
 pub mod p2p;
 pub mod file_tools;
+pub mod ecdsa_tools;
 
 use p2p::P2PNetwork;
 
